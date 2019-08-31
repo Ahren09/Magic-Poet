@@ -35,7 +35,7 @@ class Config(object):
 
 opt = Config()
 
-def generate_acrostic(net, start_words, ix2word, word2ix, prefix_words=None):
+def generate_acrostic(net, start_words, ix2word, word2ix, prefix_words=None, start_words_2=None):
     results = []
     start_word_len = len(start_words)
     input = torch.Tensor([word2ix['<START>']]).view(1,1).long()
@@ -44,6 +44,11 @@ def generate_acrostic(net, start_words, ix2word, word2ix, prefix_words=None):
 
     # index: indicates number of sentences already generated
     index = 0
+
+    # Start word 2
+    index2, start_word_len2 = None, None
+    if start_words_2:
+        index2, start_word_len2 = 0, len(start_words_2)
 
     # pre_word: Last word; used as input for generating next character
     pre_word = '<START>'
@@ -65,6 +70,12 @@ def generate_acrostic(net, start_words, ix2word, word2ix, prefix_words=None):
             if index != start_word_len:
                 w = start_words[index]
                 index += 1
+                input = input.data.new([word2ix[w]]).view(1,1)
+
+        elif pre_word == u'，':
+            if index2 != start_word_len2:
+                w = start_words_2[index2]
+                index2 += 1
                 input = input.data.new([word2ix[w]]).view(1,1)
         else:
             input = input.data.new([word2ix[w]]).view(1, 1)
@@ -154,6 +165,6 @@ def generate_pretrained(path, start_words, ix2word, word2ix, prefix_words=None):
 
 if __name__ == '__main__':
     _, word2ix, ix2word = get_data(opt)
-    generate_pretrained('./checkpoints/tang_199.pth', u'苟利国家生死以', ix2word, word2ix)
+    generate_pretrained('./checkpoints/tang_199.pth', u'苟利国家生死以', ix2word, word2ix)#, u'岂因祸福避趋之')
         
 
