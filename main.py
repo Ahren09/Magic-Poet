@@ -24,7 +24,7 @@ class Config(object):
     plot_every = 20
     use_env = True # Use wisdom or not?
     env = 'poetry'
-    max_gen_len = 48 # Length of generated poem
+    max_gen_len = 200 # Length of generated poem
     model_path = "./checkpoints/tang.pth"
 
     # Input verses
@@ -155,16 +155,16 @@ def train(**kwargs):
     poet = generate_acrostic(net, start_words, ix2word, word2ix, prefix_words)
     print(''.join(poet))
 
-def generate_pretrained(path, start_words, ix2word, word2ix, prefix_words=None):
+def generate_pretrained(path, start_words, ix2word, word2ix, prefix_words=None, start_words_2=None):
     net = Net(len(word2ix), 128, 256)
     net.load_state_dict(torch.load(path, map_location='cpu'))
-    result = generate_acrostic(net, start_words, ix2word, word2ix, prefix_words)
+    result = generate_acrostic(net, start_words, ix2word, word2ix, prefix_words, start_words_2)
     for r in result:
         r = r.replace(u'。', u'。'+'Y')
     print(''.join(result))
 
 if __name__ == '__main__':
     _, word2ix, ix2word = get_data(opt)
-    generate_pretrained('./checkpoints/tang_199.pth', u'苟利国家生死以', ix2word, word2ix)#, u'岂因祸福避趋之')
+    generate_pretrained('./checkpoints/tang_199.pth', u'苟利国家生死以', ix2word, word2ix, start_words_2=u'岂因祸福避趋之')
         
 
