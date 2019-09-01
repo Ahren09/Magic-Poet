@@ -35,10 +35,60 @@ class Config(object):
 
 opt = Config()
 
+def generate(net, start_words, ix2word, word2ix, prefix_words=None):
+    results = []
+    input = torch.Tensor([word2ix['<START>']]).view(1,1).long()
+    start_words_len = len(start_words)
+
+    # Enable GPU
+    if opt.use_gpu:
+        input = input.cuda()
+
+    hidden = None
+
+    # If we input prefix_words for artistic conception
+    if prefix_words:
+        for word in prefix_words:
+            output, hidden = net(input, hidden)
+            input = input.data.new([word2ix[word]]).view(1,1) # TODO: new() and view(1,1)
+        
+
+    # Generate output and hidden state
+    for i in range(opt.max_gen_len):
+        output, hidden = net(input, hidden)
+        top_index = output.data[0].topk(1)[1][0].item()
+        word = None
+
+        # If start_words not used up, input start_words
+        if i < start_words_len:
+            word = start_words[i]
+            input = input.data.new([word2ix[word] ]).view(1,1)
+            
+
+        else:
+            top_index = output.data[0].topk(1)[1][0].item()
+            word = ix2word[top_index]
+            input = input.data.new([top_index]).view(1,1)
+
+        results.append(word)
+
+    return results
+        
+
+
+
+
+
+
+
+
+
 def generate_acrostic(net, start_words, ix2word, word2ix, prefix_words=None, start_words_2=None):
     results = []
     start_word_len = len(start_words)
     input = torch.Tensor([word2ix['<START>']]).view(1,1).long()
+
+    # Enable GPU
     if opt.use_gpu:
         input = input.cuda()
 
@@ -155,7 +205,13 @@ def train(**kwargs):
     poet = generate_acrostic(net, start_words, ix2word, word2ix, prefix_words)
     print(''.join(poet))
 
-def generate_pretrained(path, start_words, ix2word, word2ix, prefix_words=None, start_words_2=None):
+def generate_pretrained(path, start_words, ix2word, word2ix, prefix_words=None):
+    net = Net(len(word2ix), 128, 256)
+    net.load_state_dict(torch.load(path, map_location='cpu'))
+    result = generate(net, start_words, ix2word, word2ix, prefix_words)
+    print(''.join(result))
+
+def generate_acrostic_pretrained(path, start_words, ix2word, word2ix, prefix_words=None, start_words_2=None):
     net = Net(len(word2ix), 128, 256)
     net.load_state_dict(torch.load(path, map_location='cpu'))
     result = generate_acrostic(net, start_words, ix2word, word2ix, prefix_words, start_words_2)
@@ -163,8 +219,11 @@ def generate_pretrained(path, start_words, ix2word, word2ix, prefix_words=None, 
         r = r.replace(u'。', u'。'+'Y')
     print(''.join(result))
 
+
 if __name__ == '__main__':
     _, word2ix, ix2word = get_data(opt)
-    generate_pretrained('./checkpoints/tang_199.pth', u'苟利国家生死以', ix2word, word2ix, start_words_2=u'岂因祸福避趋之')
+    generate_pretrained('./checkpoints/tang_199.pth', u'苟利国家', ix2word, word2ix, prefix_words=u'岂因祸福避趋之')
+
+    # generate_acrostic_pretrained('./checkpoints/tang_199.pth', u'苟利国家生死以', ix2word, word2ix, start_words_2=u'岂因祸福避趋之')
         
 
