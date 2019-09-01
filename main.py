@@ -9,6 +9,8 @@ import tqdm
 from torchnet import meter
 import ipdb
 
+from utils import Visualizer
+
 
 class Config(object):
     data_path = './data/'
@@ -22,10 +24,12 @@ class Config(object):
     batch_size = 128
     max_length = 125
     plot_every = 20
-    use_env = True # Use wisdom or not?
+    save_every = 100
+    use_env = True # Use visdom or not?
     env = 'poetry'
-    max_gen_len = 200 # Length of generated poem
-    model_path = "./checkpoints/tang.pth"
+    max_gen_len = 124 # Length of generated poem
+    debug_file = '/tmp/debugp'
+    model_path = None # "./checkpoints/tang.pth"
 
     # Input verses
     prefix_words = "亦可赛艇"
@@ -75,16 +79,7 @@ def generate(net, start_words, ix2word, word2ix, prefix_words=None):
             results.append(word)
 
     return results
-        
-
-
-
-
-
-
-
-
-
+    
 def generate_acrostic(net, start_words, ix2word, word2ix, prefix_words=None, start_words_2=None):
     results = []
     start_word_len = len(start_words)
@@ -145,6 +140,8 @@ def train(**kwargs):
     data = torch.from_numpy(data)
     dataloader = torch.utils.data.DataLoader(data, batch_size=opt.batch_size, shuffle=True, num_workers=2)
 
+    vis = Visualizer(env=opt.env)
+
     # Initialize the Net
     net = Net(len(word2ix), 128, 256) # TODO: Why 128 and 256?
     optimizer = torch.optim.Adam(net.parameters(), lr=opt.lr)
@@ -174,43 +171,35 @@ def train(**kwargs):
             loss_meter.add(loss.item())
 
             # Visualize
+            if (1 + step) % opt.plot_every == 0:
+                print('Epoch: ', epoch, '| Step: ', step)
+                if os.path.exists(opt.debug_file):
+                    ipdb.set_trace()
 
-            #######
-            # External
-            if (1 + step) % 10 == 0:
+                vis.plot('loss', loss_meter.value()[0])
+
+
 
                 # 诗歌原文
-                poetrys = [[ix2word[_word] for _word in data[:, _iii].tolist()]
-                        for _iii in range(data.shape[1])][:16]
+                poets = [[ix2word[w] for w in data[:, _iii].tolist()] for _iii in range(data.shape[1])][:16]
+                vis.text('</br>'.join([''.join(poet) for poet in poets]), win=u'origin_poem')
                 
-
-                gen_poetries = []
+                gen_poets = []
                 # 分别以这几个字作为诗歌的第一个字，生成8首诗
                 for word in list(u'苟利国家生死以'):
-                    gen_poetry = ''.join(generate_acrostic(net, word, ix2word, word2ix))
-                    gen_poetries.append(gen_poetry)
-                print(''.join(gen_poetries))
-
-                ####### 
-                if step == 10:
-                    break
-
-            
-
-            #for word in list(u'')
-
-    torch.save(net.state_dict(), '%s_E%s'% (opt.model_prefix, epoch))
-
-    # Generate and print result
-    start_words = opt.start_words
-    prefix_words = opt.prefix_words    
-    poet = generate_acrostic(net, start_words, ix2word, word2ix, prefix_words)
-    print(''.join(poet))
+                    gen_poet = ''.join(generate_acrostic(net, word, ix2word, word2ix))
+                    gen_poets.append(gen_poet)
+                
+                vis.text('</br>'.join([''.join(poetry) for poetry in gen_poets]), win=u'gen_poem')
+            torch.save(net.state_dict(), '%s_%s.pth'% (opt.model_prefix, epoch))
 
 def generate_pretrained(path, start_words, ix2word, word2ix, prefix_words=None):
     net = Net(len(word2ix), 128, 256)
     net.load_state_dict(torch.load(path, map_location='cpu'))
     result = generate(net, start_words, ix2word, word2ix, prefix_words)
+    sys.stdout.write("Topic: ")
+    sys.stdout.write(prefix_words)
+    print()
     print(''.join(result))
 
 def generate_acrostic_pretrained(path, start_words, ix2word, word2ix, prefix_words=None, start_words_2=None):
@@ -218,14 +207,28 @@ def generate_acrostic_pretrained(path, start_words, ix2word, word2ix, prefix_wor
     net.load_state_dict(torch.load(path, map_location='cpu'))
     result = generate_acrostic(net, start_words, ix2word, word2ix, prefix_words, start_words_2)
     for r in result:
-        r = r.replace(u'。', u'。'+'Y')
-    print(''.join(result))
+        sys.stdout.write(r)
+        if r==u'。':
+            print()
+    sys.stdout.write(''.join(result))
 
 
 if __name__ == '__main__':
     _, word2ix, ix2word = get_data(opt)
-    generate_pretrained('./checkpoints/tang_199.pth', u'苟利国家生', ix2word, word2ix, prefix_words=u'岂因祸福避趋之')
-
+    # 苟利国家
     # generate_acrostic_pretrained('./checkpoints/tang_199.pth', u'苟利国家生死以', ix2word, word2ix, start_words_2=u'岂因祸福避趋之')
-        
+
+    # 一一二七事件有感
+    # generate_pretrained('./checkpoints/tang_199.pth', u'在下知错', ix2word, word2ix, u"一一二七事件有感")
+    
+    # 我爱学习
+    # generate_acrostic_pretrained('./checkpoints/tang_199.pth', u'我爱学习', ix2word, word2ix, start_words_2=u'学习爱我')
+
+    '''
+    # Generate with each char in list
+    for word in list(u'苟利国家生死以'):
+        generate_acrostic_pretrained('./checkpoints/tang_199.pth', word, ix2word, word2ix)
+    '''
+    
+    train()
 
