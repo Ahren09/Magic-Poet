@@ -35,6 +35,8 @@ class Config(object):
 
 opt = Config()
 
+# generate()
+# Given the first few words (start_words), generate a complete poem 
 def generate(net, start_words, ix2word, word2ix, prefix_words=None):
     results = []
     input = torch.Tensor([word2ix['<START>']]).view(1,1).long()
@@ -56,21 +58,21 @@ def generate(net, start_words, ix2word, word2ix, prefix_words=None):
     # Generate output and hidden state
     for i in range(opt.max_gen_len):
         output, hidden = net(input, hidden)
-        top_index = output.data[0].topk(1)[1][0].item()
         word = None
 
         # If start_words not used up, input start_words
         if i < start_words_len:
             word = start_words[i]
-            input = input.data.new([word2ix[word] ]).view(1,1)
+            input = input.data.new([word2ix[word]]).view(1,1)
             
 
         else:
             top_index = output.data[0].topk(1)[1][0].item()
             word = ix2word[top_index]
             input = input.data.new([top_index]).view(1,1)
-
-        results.append(word)
+        
+        if word != '<EOP>':
+            results.append(word)
 
     return results
         
@@ -222,7 +224,7 @@ def generate_acrostic_pretrained(path, start_words, ix2word, word2ix, prefix_wor
 
 if __name__ == '__main__':
     _, word2ix, ix2word = get_data(opt)
-    generate_pretrained('./checkpoints/tang_199.pth', u'苟利国家', ix2word, word2ix, prefix_words=u'岂因祸福避趋之')
+    generate_pretrained('./checkpoints/tang_199.pth', u'苟利国家生', ix2word, word2ix, prefix_words=u'岂因祸福避趋之')
 
     # generate_acrostic_pretrained('./checkpoints/tang_199.pth', u'苟利国家生死以', ix2word, word2ix, start_words_2=u'岂因祸福避趋之')
         
