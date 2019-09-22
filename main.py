@@ -18,9 +18,10 @@ class Config(object):
     author = None
     constrain = None
     category = 'poet.tang'
+
     lr = 1e-3
-    use_gpu = False
-    epoch = 1
+    weight_decay = 1e-4
+    epoch = 300
     batch_size = 128
     max_length = 125
     plot_every = 20
@@ -29,11 +30,12 @@ class Config(object):
     env = 'poetry'
     max_gen_len = 124 # Length of generated poem
     debug_file = '/tmp/debugp'
-    model_path = None # "./checkpoints/tang.pth"
+    model_path = None#"./checkpoints/tang.pth"
 
     # Input verses
     prefix_words = "亦可赛艇"
     start_words = "苟利国家生死以"
+    start_words_2 = None
     acrostic = False
     model_prefix = "./checkpoints/"
 
@@ -42,12 +44,12 @@ opt = Config()
 # generate()
 # Given the first few words (start_words), generate a complete poem 
 def generate(net, start_words, ix2word, word2ix, prefix_words=None):
-    results = []
+    results = list(start_words)
     input = torch.Tensor([word2ix['<START>']]).view(1,1).long()
     start_words_len = len(start_words)
 
     # Enable GPU
-    if opt.use_gpu:
+    if torch.cuda.is_available():
         input = input.cuda()
 
     hidden = None
@@ -73,20 +75,21 @@ def generate(net, start_words, ix2word, word2ix, prefix_words=None):
         else:
             top_index = output.data[0].topk(1)[1][0].item()
             word = ix2word[top_index]
+            results.append(word)
             input = input.data.new([top_index]).view(1,1)
         
         if word != '<EOP>':
             results.append(word)
 
     return results
-    
+
 def generate_acrostic(net, start_words, ix2word, word2ix, prefix_words=None, start_words_2=None):
     results = []
     start_word_len = len(start_words)
     input = torch.Tensor([word2ix['<START>']]).view(1,1).long()
 
     # Enable GPU
-    if opt.use_gpu:
+    if torch.cuda.is_available():
         input = input.cuda()
 
     # index: indicates number of sentences already generated
@@ -140,6 +143,8 @@ def train(**kwargs):
     data = torch.from_numpy(data)
     dataloader = torch.utils.data.DataLoader(data, batch_size=opt.batch_size, shuffle=True, num_workers=2)
 
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
     vis = Visualizer(env=opt.env)
 
     # Initialize the Net
@@ -150,15 +155,18 @@ def train(**kwargs):
     # Load pre-trained model
     if opt.model_path:
         net.load_state_dict(torch.load(opt.model_path))
+    net.to(device)
 
     # TODO
     loss_meter = meter.AverageValueMeter()
 
     # Go over each epoch
     for epoch in range(opt.epoch):
+        print("Begin Epoch %s" % epoch)
         loss_meter.reset()
         for step, data in enumerate(dataloader):
             data = data.long().transpose(1, 0).contiguous()
+            data = data.to(device)
             optimizer.zero_grad()
 
             input, target = data[:-1, :], data[1:, :]
@@ -192,6 +200,34 @@ def train(**kwargs):
                 
                 vis.text('</br>'.join([''.join(poetry) for poetry in gen_poets]), win=u'gen_poem')
             torch.save(net.state_dict(), '%s_%s.pth'% (opt.model_prefix, epoch))
+
+
+# Command line interface
+'''
+Usage:
+python main.py gen --model-path='checkpoints/tang_199.pth' --acrostic=True
+'''
+def gen(**kwargs):
+    for key, value in kwargs.items():
+        setattr(opt, key, value)
+    data, word2ix, ix2word = get_data(opt)
+    net = Net(len(word2ix), 128, 256)
+    map_location = lambda s, l : s
+    state_dict = torch.load(opt.model_path, map_location=map_location)
+
+    net.load_state_dict(state_dict)
+
+    start_words = opt.start_words
+    prefix_words = opt.prefix_words
+
+    start_words = start_words.replace(',', u'，').replace('.', u'。').replace('?', u'？')
+
+    # Choose mode
+    if opt.acrostic:
+        result = generate_acrostic(net, start_words, ix2word, word2ix, prefix_words, opt.start_words_2)
+    else:
+        result = generate(net, start_words, ix2word, word2ix, prefix_words)
+    print(''.join(result))
 
 def generate_pretrained(path, start_words, ix2word, word2ix, prefix_words=None):
     net = Net(len(word2ix), 128, 256)
@@ -230,5 +266,7 @@ if __name__ == '__main__':
         generate_acrostic_pretrained('./checkpoints/tang_199.pth', word, ix2word, word2ix)
     '''
     
-    train()
+    # train()
+    import fire
+    fire.Fire()
 

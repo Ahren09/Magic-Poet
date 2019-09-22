@@ -1,1 +1,5 @@
 ./checkpoints/
+*.jpeg
+*.jpg
+*.pth
+*.pkl
