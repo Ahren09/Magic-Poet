@@ -92,8 +92,10 @@ test:
 
 ## Examples
 
-- Acrostic mode 
-![Start with "苟利国家生死以"](https://github.com/Ahren09/Magic-Poet/blob/master/examples/%E8%8B%9F%E5%88%A9%E5%9B%BD%E5%AE%B6.png)
+- Acrostic mode
+
+- Start with "苟利国家生死以", a famous Chinese verse
+!["苟利国家生死以"](https://github.com/Ahren09/Magic-Poet/blob/master/examples/%E8%8B%9F%E5%88%A9%E5%9B%BD%E5%AE%B6.png)
 
 
 ```Bash
@@ -106,10 +108,9 @@ test:
 深井松杉下，前山云汉东。度山横北极，飞雪凌苍穹。学稼落羽化，潺湲浸天空。习习时更惬，俯视空林濛。
 ```
 
-![Start with "苟利国家生死以", a famous Chinese verse ](https://github.com/Ahren09/Magic-Poet/blob/master/examples/%E8%8B%9F%E5%88%A9%E5%9B%BD%E5%AE%B6.png)
-
 - Normal mode
-![Start with "我爱学习", which stands for "I love Studying"](https://github.com/Ahren09/Magic-Poet/blob/master/examples/%E6%88%91%E7%88%B1%E5%AD%A6%E4%B9%A02.png)
+- Start with "我爱学习", which stands for "I love Studying"
+!["我爱学习"](https://github.com/Ahren09/Magic-Poet/blob/master/examples/%E6%88%91%E7%88%B1%E5%AD%A6%E4%B9%A02.png)
 
 - Start with "深度学习", which stands for "Deep Learning"
 ```Bash
