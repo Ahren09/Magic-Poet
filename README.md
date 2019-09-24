@@ -1,8 +1,10 @@
-这是电子工业出版社的《深度学习框架PyTorch：入门与实践》第九章的配套代码，利用PyTorch实现了CharRNN用以写唐诗。
+## About Magic Poet
+"Magic poet" is a Tang poem generator based on RNN.
+PyTorch实现了CharRNN用以写唐诗。
 
-本次实验的数据来自于[chinese-poetry](https://github.com/chinese-poetry/chinese-poetry)。但是作者已经进行处理成二进制文件`tang.npz`，可以直接使用。读者可以[点此](http://pytorch-1252820389.cosbj.myqcloud.com/tang.npz)下载`tang.npz`
+The dataset [chinese-poetry](https://github.com/chinese-poetry/chinese-poetry)。`tang.npz`，可以直接使用。读者可以[点此](http://pytorch-1252820389.cosbj.myqcloud.com/tang.npz)下载`tang.npz`
 
-## 环境配置
+## Environment setup
 - Install [PyTorch](http://pytorch.org)
 
 - Install visdom
@@ -14,7 +16,7 @@
 nohup python -m visdom.server &
 ``` 
 ## Train
-Poem Writer supports a command line API. You can run the command to 
+Magic Poet supports a command line API. You can run the command to 
 
 ```Bash
 python main.py train --plot-every=150\
@@ -50,10 +52,10 @@ The commandine arguments are specified：
     model_prefix = 'checkpoints/tang' # 模型保存路径
 
 ```
-## 生成诗歌
+## Generate
 作者提供了预训练好的模型，可以[点此](http://pytorch-1252820389.cosbj.myqcloud.com/tang_199.pth)下载`tang_199.pth`，用以生成诗歌
 
-生成藏头诗的命令如下：
+Generating acrostic poem：
 
 ```Bash
 python  main.py gen  --model-path='checkpoints/tang_199.pth' \
@@ -65,7 +67,7 @@ python  main.py gen  --model-path='checkpoints/tang_199.pth' \
 深居不可见，浩荡心亦同。度年一何远，宛转三千雄。学立万里外，诸夫四十功。习习非吾仕，所贵在其功。
 ```
 
-生成其它诗歌的命令如下：
+Generating poem with start words
 
 ```Bash
 python2 main.py gen  --model-path='model.pth' 
@@ -90,7 +92,7 @@ test:
 - [x] Python3
 
 
-## 举例
+## Examples
 
 - 藏头诗
 ```Bash
