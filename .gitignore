@@ -2,7 +2,6 @@
 *.jpeg
 *.jpg
 examples/code.png
-examples/一一二七.png
 *.pth
 *.pkl
 *.npz

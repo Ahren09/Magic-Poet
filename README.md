@@ -1,8 +1,7 @@
 ## About Magic Poet
-"Magic poet" is a Tang poem generator based on RNN.
-PyTorch实现了CharRNN用以写唐诗。
+"Magic poet" is a Tang poem generator based on RNN. It was implemented using PyTorch. The model was trained using CUDA
 
-The dataset [chinese-poetry](https://github.com/chinese-poetry/chinese-poetry)。`tang.npz`，可以直接使用。读者可以[点此](http://pytorch-1252820389.cosbj.myqcloud.com/tang.npz)下载`tang.npz`
+The dataset can be found at [chinese-poetry](https://github.com/chinese-poetry/chinese-poetry), a collection of more than 25,000 Chinese Tang poems. Alternatively, you can utilize preprocessed data using tang.npz](http://pytorch-1252820389.cosbj.myqcloud.com/tang.npz)
 
 ## Environment setup
 - Install [PyTorch](http://pytorch.org)
@@ -11,7 +10,7 @@ The dataset [chinese-poetry](https://github.com/chinese-poetry/chinese-poetry)�
 ```Bash
  python -m visdom.server
 ```
-- Alternatively, you can use:
+- Alternatively, you can run:
 ```Bash
 nohup python -m visdom.server &
 ``` 
@@ -29,31 +28,30 @@ python main.py train --plot-every=150\
 
 The commandine arguments are specified：
 ```Python
-    data_path = 'data/' # 诗歌的文本文件存放路径
-    pickle_path= 'tang.npz' # 预处理好的二进制文件 
-    author = None # 只学习某位作者的诗歌
-    constrain = None # 长度限制
-    category = 'poet.tang' # 类别，唐诗还是宋诗歌(poet.song)
+    data_path = 'data/' # Path to store the poems
+    pickle_path= 'tang.npz' # Preprocessed binary dataset 
+    author = None # Learn from specific poets
+    constrain = None # Length limit
+    category = 'poet.tang' # Alternatively you can train with 'poet.song'
     lr = 1e-3 
     weight_decay = 1e-4
     use_gpu = True
     epoch = 20  
     batch_size = 128
-    maxlen = 125 # 超过这个长度的之后字被丢弃，小于这个长度的在前面补空格
-    plot_every = 20 # 每20个batch 可视化一次
-    # use_env = True # 是否使用visodm
+    maxlen = 125 # Max length of generated poem
+    plot_every = 20 # Visualize every 20 batches
     env='poetry' # visdom env
-    max_gen_len = 200 # 生成诗歌最长长度
+    max_gen_len = 200 # Max length of generated poem
     debug_file='/tmp/debugp'
-    model_path=None # 预训练模型路径
-    prefix_words = '细雨鱼儿出,微风燕子斜。' # 不是诗歌的组成部分，用来控制生成诗歌的意境
-    start_words='闲云潭影日悠悠' # 诗歌开始
-    acrostic = False # 是否是藏头诗
-    model_prefix = 'checkpoints/tang' # 模型保存路径
+    model_path=None # Path of pretrained model
+    prefix_words = '细雨鱼儿出,微风燕子斜。' # Set the tone of the poem
+    start_words='闲云潭影日悠悠' # Start words
+    acrostic = False
+    model_prefix = 'checkpoints/tang' # Path for storing the verse.
 
 ```
 ## Generate
-作者提供了预训练好的模型，可以[点此](http://pytorch-1252820389.cosbj.myqcloud.com/tang_199.pth)下载`tang_199.pth`，用以生成诗歌
+You can download the pre-trained model here[tang_199.pth](http://pytorch-1252820389.cosbj.myqcloud.com/tang_199.pth) to generate verses
 
 Generating acrostic poem：
 
@@ -77,7 +75,7 @@ python2 main.py gen  --model-path='model.pth'
 江流天地外，风日水边东。稍稍愁蝴蝶，心摧苎范蓬。云飞随海远，心似汉阳培。按俗朝廷上，分军朔雁通。封疆朝照地，赐劒豫章中。畴昔分曹籍，高名翰墨场。翰林推国器，儒冠见忠贞。臯宙非无事，姦邪亦此中。渥仪非贵盛，儒实不由锋。几度沦亡阻，千年垒数重。宁知天地外，长恐海西东。邦测期戎逼，箫韶故国通。蜃楼瞻凤篆，云辂接旌幢。別有三山里，来随万里同。烟霞临海路，山色落云中。渥泽三千里，青山万古通。何言陪宴侣，复使
 ```
 
-### 兼容性测试
+### Compatibility
 train 
 - [x] GPU  
 - [] CPU  
@@ -94,7 +92,10 @@ test:
 
 ## Examples
 
-- 藏头诗
+- Acrostic mode 
+![Start with "苟利国家生死以"](https://github.com/Ahren09/Magic-Poet/blob/master/examples/%E8%8B%9F%E5%88%A9%E5%9B%BD%E5%AE%B6.png)
+
+
 ```Bash
  python3  main.py gen  --model-path='checkpoints/tang_199.pth' \
                                      --pickle-path='tang.npz' \
@@ -105,7 +106,12 @@ test:
 深井松杉下，前山云汉东。度山横北极，飞雪凌苍穹。学稼落羽化，潺湲浸天空。习习时更惬，俯视空林濛。
 ```
 
-- 深度学习开头，七言
+![Start with "苟利国家生死以", a famous Chinese verse ](https://github.com/Ahren09/Magic-Poet/blob/master/examples/%E8%8B%9F%E5%88%A9%E5%9B%BD%E5%AE%B6.png)
+
+- Normal mode
+![Start with "我爱学习", which stands for "I love Studying"](https://github.com/Ahren09/Magic-Poet/blob/master/examples/%E6%88%91%E7%88%B1%E5%AD%A6%E4%B9%A02.png)
+
+- Start with "深度学习", which stands for "Deep Learning"
 ```Bash
 python2  main.py gen    --model-path='checkpoints/tang_199.pth' \
                         --pickle-path='tang.npz' \
