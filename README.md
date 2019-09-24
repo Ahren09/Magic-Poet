@@ -95,6 +95,8 @@ test:
 - Acrostic mode
 
 - Start with "苟利国家生死以", a famous Chinese verse
+
+
 !["苟利国家生死以"](https://github.com/Ahren09/Magic-Poet/blob/master/examples/%E8%8B%9F%E5%88%A9%E5%9B%BD%E5%AE%B6.png)
 
 
